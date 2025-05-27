@@ -27,7 +27,7 @@ import asyncio
 import aiohttp
 import xml.etree.ElementTree as ET
 import chardet
-
+import git
 
 lock = asyncio.Lock()
 missed_items=0
@@ -42,6 +42,7 @@ def getProperties(xml,space):
   if properties is not None:
     for prop in properties:
        properties_dict[prop.tag.split('}')[-1]] = prop.text  
+ 
   parent=xml
   if xml.find('parent', space) is not None:
       parent=xml.find('parent', space)
@@ -107,17 +108,25 @@ class DeepAnalysis:
       DeepAnalysis is the cass that analyzes the SBOM.
       It is given the SBOM content
     """
-    def __init__(self, SBOM1):
+    def __init__(self, SBOM1, owner, repo):
         self.SBOMContents= SBOM1
         self.missing_packs={}
+        self.missingdirect=[]
         self.checked_packs={}
-    
+        self.licenses={}
+        self.owner=owner
+        self.repo=repo
    
     def getMissingPacks(self):
         """
                Returns the missingpacks
         """
         return self.missing_packs 
+    def getMissingDirectPacks(self):
+        """
+               Returns the directmissingpacks
+        """
+        return self.missingdirect 
 
 
     async def add_to_missing_packs(self,pac,missing_packs):
@@ -128,7 +137,95 @@ class DeepAnalysis:
     async def add_to_checked_packs(self,pac,checked_packs):
       async with lock:  # Ensures that only one task can modify the list at a time
             checked_packs.add(pac)
+        
+        
+    
+
+    def analyzeDirect(self):
+     repo=self.repo
+     owner=self.owner
+     repo_url = f"https://github.com/{owner}/{repo}.git"
+     local_path = f"./{repo}"
+     filesfound=[]
+     directdeps=[]
+     if os.path.exists(local_path):
+        repo=git.Repo(local_path)
+     else:
+        repo =git.Repo.clone_from(repo_url, local_path)
+     for root, dirs,files in os.walk(local_path):
+         if "pom.xml" in files:
+           print("Pom.xml found")
+           full_path = os.path.join(root, "pom.xml")
+           filesfound.append(full_path)
+         if "build.gradle" in files:
+           print("gradle.build found")
+           full_path = os.path.join(root, "build.gradle")
+           filesfound.append(full_path)
+     for item in filesfound:
+       with open(item, 'r', encoding='utf-8') as f:
+          content = f.read()
+          if "gradle" in item:
+            dependencies = re.findall(r'^\s*(?:classpath|implementation|api|compile|compileOnly|runtimeOnly|testImplementation|testCompile)\s+[\'"]([^\'"]+)[\'"]', content,re.MULTILINE)
             
+            
+            for dep in dependencies:
+              #in form "group:artificat:version"
+              splitdep=dep.split(":")
+              groupID=splitdep[0]
+              artificatID=splitdep[1]
+              version=splitdep[-1]
+              dependency=groupID+"/"+artificatID
+              if version !="":
+                   dependency+="@"+ version
+              directdeps.append(dependency)
+          
+          
+          
+          
+          
+          #POM FILE
+          if ".xml" in item:
+            pkg_xml= ET.fromstring(content)
+            namespace = {'': 'http://maven.apache.org/POM/4.0.0'}
+            prop_dict=getProperties(pkg_xml,namespace)
+            if pkg_xml.find('dependencyManagement',namespace) is not None:
+                pkg_xml=pkg_xml.find('dependencyManagement',namespace)
+            
+            dependencies= pkg_xml.find('dependencies',namespace)
+            if dependencies is None:
+                  dependencies=pkg_xml.find('dependencies')
+                  if dependencies is not None:
+                       namespace={'':''}
+                  prop_dict=getProperties(pkg_xml,namespace)
+
+                  #if dependecies exist, get dependencies
+
+            if dependencies is not None:
+                for dependency in dependencies.findall('dependency',namespace):
+                    if dependency is not None:   
+                     groupID=dependency.find('groupId',namespace).text
+                     artificatID=dependency.find('artifactId',namespace).text
+                     version=""
+                     if dependency.find('version',namespace) is not None:
+                         version=dependency.find('version',namespace).text
+                         
+                     for key, value in prop_dict.items():
+                             if value is None:
+                                value = version      
+                             version = version.replace(f"${{{key}}}", value)
+                             artificatID = artificatID.replace(f"${{{key}}}", value)
+                             groupID = groupID.replace(f"${{{key}}}", value)
+
+                     dependency=groupID+"/"+artificatID
+                     if version !="":
+                        dependency+="@"+ version
+                     directdeps.append(dependency)                     
+
+
+                       
+     return directdeps
+
+
 
 
     async def MavenAnalyzeTransient(self, need_to_check, checked_packages, missing_packs, present_packs):
@@ -147,6 +244,7 @@ class DeepAnalysis:
                   pacGroup=pacsplit[0]
                   pacArtificat=pacsplit[1]
                   pacVersion=""
+                  files={}
                   if len(pacArtificat.split("@")) >1:
                      pacsplit2=pacArtificat.split("@")
                      pacArtificat=pacsplit2[0]
@@ -190,6 +288,9 @@ class DeepAnalysis:
                   namespace = {'': 'http://maven.apache.org/POM/4.0.0'}
                   dependencies= pkg_xml.find('dependencies',namespace)
                   properties= pkg_xml.find('properties',namespace)
+                       
+                  if pkg_xml.find('dependencyManagement',namespace) is not None:
+                      pkg_xml=pkg_xml.find('dependencyManagement',namespace)
                   version=''
                   if dependencies is None:
                     dependencies=pkg_xml.find('dependencies')
@@ -215,10 +316,10 @@ class DeepAnalysis:
                      if properties_dict is not None:
                        #print(version)
                        for key, value in properties_dict.items():
-                            # print("Key: " + key)
                              if value is None:
                                 value = version
-
+                                
+                                
                              version = version.replace(f"${{{key}}}", value)
                              artificatID = artificatID.replace(f"${{{key}}}", value)
                              groupID = groupID.replace(f"${{{key}}}", value)
@@ -367,7 +468,8 @@ class DeepAnalysis:
                 if len(pacsplit)>=3:
                   pacGroup=pacsplit[1]
                   pacArtificat=pacsplit[2]
-
+            
+ #eles if gradle
                 else:
                   pacsplit=pac.split(":")
                   pacGroup=pacsplit[3]
@@ -380,14 +482,22 @@ class DeepAnalysis:
                     continue
                 pac=pacGroup+ "/" +pacArtificat
                 present_packs.append(pac)
-                
+            
               
                 
        global missed_items   
-       print("This may take a minute...")
+       print("Checking Direct Dependencies...")
+       directdeps=self.analyzeDirect()
+       for item in directdeps:
+            if item not in present_packs:
+                self.missingdirect.append(item)
+                present_packs.append(item)
+
        if python=="True":
+          print("Checking Transitive Dependencies...")
           await self.PythonAnalyzeTransient( set(present_packs), checked_pks, missing_packs)
        else:
+          print("Checking Transitive Dependencies...")
           await self.MavenAnalyzeTransient( set(present_packs), checked_pks, missing_packs,set(present_packs))
        percent=0
        if len(checked_pks) + missed_items >0:
@@ -395,6 +505,11 @@ class DeepAnalysis:
        print("There have been " + str(missed_items) + " packages whose pom cannot be found\n")
        print("There have been " + str(len(checked_pks)) + " checked dependencies/transitive dependencies.\nMissing packages found with " + str(percent*100) + "% of packages being unable to resolve a .pom." )
        self.missing_packs=missing_packs
+       
+       if len(self.missingdirect)>0:
+          print("MISSING " + str(len(self.missingdirect)) + " DIRECT DEPENDENCIES IN SBOM:")
+          print(self.missingdirect)
+
                
                    
                
@@ -425,14 +540,18 @@ async def main():
        SBOM1=SBOM(fileOrRemote)
        fileContents=SBOM1.getJson()
     #print(fileContents)
-    SBOMAnalysis=DeepAnalysis(fileContents)
+    owner = input("Enter the owner: ").strip()
+    repo = input("Enter the repo: ").strip()
+
+    SBOMAnalysis=DeepAnalysis(fileContents, owner, repo)
     await SBOMAnalysis.Analyze()
     missing_packs=SBOMAnalysis.getMissingPacks()
     missing_pack_list=list(missing_packs)
     missing_pack_list.sort()
+    print("Missing Transitive Dependencies:")
     print(missing_pack_list)     
-    print(str(len(missing_packs)) + " MISSING TRANSIENT PACKAGES\n")
-    
+    print(str(len(missing_packs)) + " MISSING TRANSIENT DEPENDENCIES\n")
+ 
 
    
 

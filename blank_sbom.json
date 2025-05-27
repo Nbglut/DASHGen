@@ -1,0 +1,106 @@
+{
+    "spdxVersion": "SPDX-2.3",
+    "dataLicense": "CC0-1.0",
+    "SPDXID": "SPDXRef-DOCUMENT",
+    "name": "./ik-analyzer-solr",
+    "documentNamespace": "https://anchore.com/syft/dir/ik-analyzer-solr-cfe55046-246f-41b3-9c4d-40c4b46f7f0c",
+    "creationInfo": {
+        "licenseListVersion": "3.25",
+        "creators": [
+            "Organization: Anchore, Inc",
+            "Tool: syft-1.22.0"
+        ],
+        "created": "2025-04-28T00:08:36Z"
+    },
+    "packages": [
+         ],
+    "files": [
+        {
+            "fileName": "\\pom.xml",
+            "SPDXID": "SPDXRef-File--pom.xml-44ab95a548b6a651",
+            "checksums": [
+                {
+                    "algorithm": "SHA1",
+                    "checksumValue": "0000000000000000000000000000000000000000"
+                }
+            ],
+            "licenseConcluded": "NOASSERTION",
+            "licenseInfoInFiles": [
+                "NOASSERTION"
+            ],
+            "copyrightText": "NOASSERTION"
+        }
+    ],
+    "hasExtractedLicensingInfos": [
+        {
+            "licenseId": "LicenseRef-The-Apache-Software-License--Version-2.0",
+            "extractedText": "The Apache Software License, Version 2.0"
+        }
+    ],
+    "relationships": [
+        {
+            "spdxElementId": "SPDXRef-Package-java-archive-lucene-core-4c973ae126496fd8",
+            "relatedSpdxElement": "SPDXRef-Package-java-archive-ik-analyzer-a4cc23ff6de992c1",
+            "relationshipType": "DEPENDENCY_OF"
+        },
+        {
+            "spdxElementId": "SPDXRef-Package-java-archive-lucene-queryparser-6ca4a88120ff4233",
+            "relatedSpdxElement": "SPDXRef-Package-java-archive-ik-analyzer-a4cc23ff6de992c1",
+            "relationshipType": "DEPENDENCY_OF"
+        },
+        {
+            "spdxElementId": "SPDXRef-Package-java-archive-lucene-analyzers-common-abb25ac97ac86001",
+            "relatedSpdxElement": "SPDXRef-Package-java-archive-ik-analyzer-a4cc23ff6de992c1",
+            "relationshipType": "DEPENDENCY_OF"
+        },
+        {
+            "spdxElementId": "SPDXRef-Package-java-archive-lucene-core-4c973ae126496fd8",
+            "relatedSpdxElement": "SPDXRef-File--pom.xml-44ab95a548b6a651",
+            "relationshipType": "OTHER",
+            "comment": "evident-by: indicates the package's existence is evident by the given file"
+        },
+        {
+            "spdxElementId": "SPDXRef-Package-java-archive-lucene-queryparser-6ca4a88120ff4233",
+            "relatedSpdxElement": "SPDXRef-File--pom.xml-44ab95a548b6a651",
+            "relationshipType": "OTHER",
+            "comment": "evident-by: indicates the package's existence is evident by the given file"
+        },
+        {
+            "spdxElementId": "SPDXRef-Package-java-archive-ik-analyzer-a4cc23ff6de992c1",
+            "relatedSpdxElement": "SPDXRef-File--pom.xml-44ab95a548b6a651",
+            "relationshipType": "OTHER",
+            "comment": "evident-by: indicates the package's existence is evident by the given file"
+        },
+        {
+            "spdxElementId": "SPDXRef-Package-java-archive-lucene-analyzers-common-abb25ac97ac86001",
+            "relatedSpdxElement": "SPDXRef-File--pom.xml-44ab95a548b6a651",
+            "relationshipType": "OTHER",
+            "comment": "evident-by: indicates the package's existence is evident by the given file"
+        },
+        {
+            "spdxElementId": "SPDXRef-DocumentRoot-Directory-.-ik-analyzer-solr",
+            "relatedSpdxElement": "SPDXRef-Package-java-archive-ik-analyzer-a4cc23ff6de992c1",
+            "relationshipType": "CONTAINS"
+        },
+        {
+            "spdxElementId": "SPDXRef-DocumentRoot-Directory-.-ik-analyzer-solr",
+            "relatedSpdxElement": "SPDXRef-Package-java-archive-lucene-analyzers-common-abb25ac97ac86001",
+            "relationshipType": "CONTAINS"
+        },
+        {
+            "spdxElementId": "SPDXRef-DocumentRoot-Directory-.-ik-analyzer-solr",
+            "relatedSpdxElement": "SPDXRef-Package-java-archive-lucene-core-4c973ae126496fd8",
+            "relationshipType": "CONTAINS"
+        },
+        {
+            "spdxElementId": "SPDXRef-DocumentRoot-Directory-.-ik-analyzer-solr",
+            "relatedSpdxElement": "SPDXRef-Package-java-archive-lucene-queryparser-6ca4a88120ff4233",
+            "relationshipType": "CONTAINS"
+        },
+        {
+            "spdxElementId": "SPDXRef-DOCUMENT",
+            "relatedSpdxElement": "SPDXRef-DocumentRoot-Directory-.-ik-analyzer-solr",
+            "relationshipType": "DESCRIBES"
+        }
+    ]
+}
