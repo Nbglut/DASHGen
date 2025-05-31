@@ -112,6 +112,7 @@ class DeepAnalysis:
         self.SBOMContents= SBOM1
         self.missing_packs={}
         self.missingdirect=[]
+        self.relationships={}
         self.checked_packs={}
         self.licenses={}
         self.owner=owner
@@ -122,6 +123,11 @@ class DeepAnalysis:
                Returns the missingpacks
         """
         return self.missing_packs 
+        
+        
+        
+        
+        
     def getMissingDirectPacks(self):
         """
                Returns the directmissingpacks
@@ -132,6 +138,19 @@ class DeepAnalysis:
     async def add_to_missing_packs(self,pac,missing_packs):
       async with lock:  # Ensures that only one task can modify the list at a time
             missing_packs.add(pac)
+            
+            
+    async def add_to_relationships(self,pac,newpac,relationships):
+      async with lock:  # Ensures that only one task can modify the list at a time
+            if pac not in relationships:
+                
+                relationships[pac]= {newpac}
+            else:            
+                relationships[pac].add( newpac)
+            #print(relationships[pac])
+
+            
+            
             
             
     async def add_to_checked_packs(self,pac,checked_packs):
@@ -228,7 +247,7 @@ class DeepAnalysis:
 
 
 
-    async def MavenAnalyzeTransient(self, need_to_check, checked_packages, missing_packs, present_packs):
+    async def MavenAnalyzeTransient(self, need_to_check, checked_packages, missing_packs, relationships, present_packs):
                """
                    Recursive function that goes up the chain of a package pac and finds all of the missing packages (recorded in missing_pack) 
                    by checking pacakges against present_packs and avoids checking the same package twice by using checked_packages  for Java Maven Projects
@@ -333,7 +352,11 @@ class DeepAnalysis:
                  
                   #if newpac not in present_packs 
                      if newpac not in missing_packs and newpac not in present_packs:
-                            #print("Adding to missing packs " + newpac)   
+                            #print("Adding to missing packs " + newpac)
+                            #print("PAC:" + pac + " newpac: " + newpac)  
+                            
+                            #NEWPAC DEPENDS ON PAC 
+                            await self.add_to_relationships(pac,newpac,relationships)
                             await self.add_to_missing_packs(newpac, missing_packs)
                    # If newpac not in checked
                      if newpac not in checked_packages and newpac not in need_to_check:
@@ -342,9 +365,9 @@ class DeepAnalysis:
                       
                   if len(need_to_check) >0:
                      
-                     await self.MavenAnalyzeTransient(need_to_check, checked_packages, missing_packs, present_packs)
+                     await self.MavenAnalyzeTransient(need_to_check, checked_packages, missing_packs, relationships, present_packs)
       
-               return missing_packs
+               return missing_packs, relationships
 
                
 
@@ -447,6 +470,7 @@ class DeepAnalysis:
        req_packs=[]
        present_packs=[]
        missing_packs=set()
+       relationships={}
        #print(self.SBOMContents)
        pks=self.SBOMContents["packages"]
        python = input("Is this a Python Project? True or False")
@@ -498,14 +522,17 @@ class DeepAnalysis:
           await self.PythonAnalyzeTransient( set(present_packs), checked_pks, missing_packs)
        else:
           print("Checking Transitive Dependencies...")
-          await self.MavenAnalyzeTransient( set(present_packs), checked_pks, missing_packs,set(present_packs))
+          await self.MavenAnalyzeTransient( set(present_packs), checked_pks, missing_packs, relationships, set(present_packs))
        percent=0
        if len(checked_pks) + missed_items >0:
         percent= missed_items/(len(checked_pks) +missed_items) 
        print("There have been " + str(missed_items) + " packages whose pom cannot be found\n")
        print("There have been " + str(len(checked_pks)) + " checked dependencies/transitive dependencies.\nMissing packages found with " + str(percent*100) + "% of packages being unable to resolve a .pom." )
        self.missing_packs=missing_packs
-       
+       self.relationships=relationships
+       for item in self.relationships:
+             for i in self.relationships[item]:
+                print(i + " depeneds on " + item)
        if len(self.missingdirect)>0:
           print("MISSING " + str(len(self.missingdirect)) + " DIRECT DEPENDENCIES IN SBOM:")
           print(self.missingdirect)
