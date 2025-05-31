@@ -114,7 +114,7 @@ Main function that "restores" SBOMs by adding missing packages, including their 
 """  
   
   
-def restoreSBOM(fileContents, missing_packs):
+def restoreSBOM(fileContents, missing_packs, relationships):
            print("Restoring...")
            
            #For every item in missing_packs, add an entry in SBOM
@@ -180,7 +180,13 @@ def restoreSBOM(fileContents, missing_packs):
                    }
                  ]
                }  
-              fileContents["packages"].append(new_package)       
+              fileContents["packages"].append(new_package)  
+              
+              
+              
+              
+           #FOR EVER ITEM IN RELATIONSHIPS
+           #ADD Entry for every relationship     
            return fileContents
 
 
@@ -210,10 +216,17 @@ async def main():
           missingdirect = analyzer.getMissingDirectPacks()
           print("\nThe SBOM was missing " + str(len(missingdirect)) + " direct dependencies.\n")
 
-        
-          newfileContents=restoreSBOM(fileContents, missingdirect)
+          relations = analyzer.getRelationships()
+
+          newfileContents=restoreSBOM(fileContents, missing_packs, relations)
           print("\nThe SBOM was missing " + str(len(missing_packs)) + " transitive dependencies.\n")
-          newfileContents=restoreSBOM(newfileContents, missing_packs)
+
+
+
+
+
+
+
 
           filename=filename.split("json")[0]
           with open(filename+'_restored.json', 'w') as file:

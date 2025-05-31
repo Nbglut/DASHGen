@@ -134,6 +134,14 @@ class DeepAnalysis:
         """
         return self.missingdirect 
 
+   
+    def getRelationships(self):
+        """
+               Returns the relationships
+        """
+        return self.relationships 
+
+
 
     async def add_to_missing_packs(self,pac,missing_packs):
       async with lock:  # Ensures that only one task can modify the list at a time
@@ -353,9 +361,9 @@ class DeepAnalysis:
                   #if newpac not in present_packs 
                      if newpac not in missing_packs and newpac not in present_packs:
                             #print("Adding to missing packs " + newpac)
-                            #print("PAC:" + pac + " newpac: " + newpac)  
+                            print("PAC:" + pac + " newpac: " + newpac)  
                             
-                            #NEWPAC DEPENDS ON PAC 
+                            #NEWPAC DEPENDS ON PAC - NOT NECESSARILLY CORRECT!! 
                             await self.add_to_relationships(pac,newpac,relationships)
                             await self.add_to_missing_packs(newpac, missing_packs)
                    # If newpac not in checked
