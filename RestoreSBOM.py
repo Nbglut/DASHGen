@@ -115,7 +115,7 @@ Main function that "restores" SBOMs by adding missing packages, including their 
  
   
   
-def restoreSBOM(fileContents, missing_packs, relationships):
+def restoreSBOM(fileContents, missing_packs, relationships, rootID):
            print("Restoring...")
            
            #For every item in missing_packs, add an entry in SBOM
@@ -191,13 +191,12 @@ def restoreSBOM(fileContents, missing_packs, relationships):
            #item depends on pac
               itemversion= item.split('@')[-1]
               itemlocator= item.split('@')[0]
-              itemname=itemlocator.replace("/",".")
-              artname=itemlocator.split("/")[-1]
               for pac in relationships[item]:
-                print(pac)
+               # print(pac)
                 pacversion= pac.split('@')[-1]
                 paclocator= pac.split('@')[0]
-
+                if item=="root":
+                  itemlocator=rootID
                 
                 new_relation= {
       "spdxElementId": "SPDXRef-Package-" +  itemlocator.replace(".","") +itemversion,
@@ -213,21 +212,31 @@ def restoreSBOM(fileContents, missing_packs, relationships):
 
     
 
-
+#Method to get rootname
+def getRootID(fileContents):
+#search ["relationships"
+# get the relationship with "relationshipType" of "DESCRIBES"
+# get the name of the "relatedSpdxElement" - this is the name of the root. 
+     return "roottest3"
 
 
 
 
 async def main():
           filename=sys.argv[1]
-
+          #change it so we remove this
           with open(filename, 'r') as file:
                 fileContents = json.load(file)
           if 'sbom' in fileContents:
                 fileContents=fileContents['sbom']
+                
+                
+          #Instead, we start here      
           owner=input("Owner of Github: ")
           repo=input("Repo name: ")
-
+          #use the GithubAPI to get the SBOM given by GitHUB SBOM 
+          #get the filecontents of the the GitHUB SBOM
+          #get teh rootname of 
 
           analyzer=DeepAnalysis(fileContents, owner, repo)
           await analyzer.Analyze()
@@ -240,7 +249,7 @@ async def main():
           relations = analyzer.getRelationships()
           missing_packs.update(missingdirect)
 
-          newfileContents=restoreSBOM(fileContents, missing_packs, relations)
+          newfileContents=restoreSBOM(fileContents, missing_packs, relations, getRootID(fileContents)) 
           print("\nThe SBOM was missing " + str(len(missing_packs)) + " transitive dependencies.\n")
 
 

@@ -550,9 +550,9 @@ class DeepAnalysis:
        print("There have been " + str(len(checked_pks)) + " checked dependencies/transitive dependencies.\nMissing packages found with " + str(percent*100) + "% of packages being unable to resolve a .pom." )
        self.missing_packs=missing_packs
        self.relationships=relationships
-       for item in self.relationships:
-             for i in self.relationships[item]:
-                print(i + " depeneds on " + item)
+     #  for item in self.relationships:
+        #     for i in self.relationships[item]:
+        #        print(i + " depeneds on " + item)
        if len(self.missingdirect)>0:
           print("MISSING " + str(len(self.missingdirect)) + " DIRECT DEPENDENCIES IN SBOM:")
           print(self.missingdirect)
