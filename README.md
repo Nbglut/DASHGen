@@ -5,8 +5,12 @@ This project, is designed to automate the creation of SBOMs, including transitvi
 
 Currently, the focus of DASHGen is Maven/Gradle projects that are available on GitHub.
 
-#How it Works
+# How it Works
 
-First, DASHGen retrieves the current SBOM that GitHub automatically creates. This SBOM will have basic information about the project, but will often be missing both transtivie, and sometimes even direct, dependencies of the project. Then DASHGen uses Maven or Gradle files to traverse the dependency trees and gather all depnendencies, as well as their relationships. In other words, DASHGen supplements the built-in GitHub SBOM Generator.
+First, DASHGen retrieves the current SBOM that GitHub automatically creates. This SBOM will have basic information about the project, but will often be missing both transtivie, and sometimes even direct, dependencies of the project. 
 
-WORK IN PROGRESS
+Then, DASHGen uses Maven or Gradle files to traverse the dependency trees and gather all depnendencies, as well as their relationships. In other words, DASHGen supplements the built-in GitHub SBOM Generator.
+
+
+
+WORK IN PROGRESS - While the functionality is mostly done, there exists some work before DASHGen can be properly used
