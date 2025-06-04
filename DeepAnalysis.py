@@ -101,6 +101,12 @@ async def get_XML_from_link(link):
        # response = requests.get(link)
         #print(response.status_code) # Print the status code
         #return response.json() 
+        
+        
+async def named_task(coro, name):
+    result1, result2 = await coro
+    return (name, result1, result2)
+
 
 
 class DeepAnalysis:
@@ -284,12 +290,14 @@ class DeepAnalysis:
                   #Else just [groupid]/[artificat]
                   linkPart1=f"https://repo1.maven.org/maven2"
                   pacGroupSplit= pacGroup.split(".")
+                  url=""
                   for item in pacGroupSplit:
                        linkPart1 += "/" + item
                   if pacVersion != "":
-                   tasks.append( get_XML_from_link(linkPart1 + "/" +pacArtificat + "/" +pacVersion + "/" + pacArtificat + "-" +pacVersion + ".pom"))
+                   url=linkPart1 + "/" +pacArtificat + "/" +pacVersion + "/" + pacArtificat + "-" +pacVersion + ".pom"
                   else: 
-                   tasks.append( get_XML_from_link(linkPart1 + "/" +pacArtificat +  ".pom"))
+                   url=get_XML_from_link(linkPart1 + "/" +pacArtificat +  ".pom", name=pac)
+                  tasks.append(named_task(get_XML_from_link(url), pac))
 
                 
                   if pac not in missing_packs and pac not in present_packs and add:
@@ -299,13 +307,14 @@ class DeepAnalysis:
                   await self.add_to_checked_packs(pac,checked_packages)  
                   
                #asynch get all xmls
+
                results = await asyncio.gather(*tasks)
                #for all packages' xml
                for tup in results:
-                if isinstance(tup, tuple) and len(tup) == 2:
-                        pkg_xml, properties_dict = tup
+                if isinstance(tup, tuple) and len(tup) == 3:
+                        pac,pkg_xml, properties_dict = tup
                 else:
-                        pkg_xml, properties_dict = tup, None  # Default to None if missing
+                        pac, pkg_xml, properties_dict = tup, None, "error"  # Default to None if missing
                 if pkg_xml is not None:
                 #get properties in case there are variables in xml
                   #properties_dict = {}
@@ -360,10 +369,8 @@ class DeepAnalysis:
                  
                   #if newpac not in present_packs 
                      if newpac not in missing_packs and newpac not in present_packs:
-                            #print("Adding to missing packs " + newpac)
-                            print("PAC:" + pac + " newpac: " + newpac)  
                             
-                            #NEWPAC DEPENDS ON PAC - NOT NECESSARILLY CORRECT!! 
+                            #NEWPAC DEPENDS ON PAC 
                             await self.add_to_relationships(pac,newpac,relationships)
                             await self.add_to_missing_packs(newpac, missing_packs)
                    # If newpac not in checked
