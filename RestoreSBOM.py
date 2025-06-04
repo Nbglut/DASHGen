@@ -112,6 +112,7 @@ def findParentLicense(parent,namespace):
 Main function that "restores" SBOMs by adding missing packages, including their name, license, etc.
 
 """  
+ 
   
   
 def restoreSBOM(fileContents, missing_packs, relationships):
@@ -186,6 +187,26 @@ def restoreSBOM(fileContents, missing_packs, relationships):
               
               
            #FOR EVER ITEM IN RELATIONSHIPS
+           for item in relationships:
+           #item depends on pac
+              itemversion= item.split('@')[-1]
+              itemlocator= item.split('@')[0]
+              itemname=itemlocator.replace("/",".")
+              artname=itemlocator.split("/")[-1]
+              for pac in relationships[item]:
+                print(pac)
+                pacversion= pac.split('@')[-1]
+                paclocator= pac.split('@')[0]
+
+                
+                new_relation= {
+      "spdxElementId": "SPDXRef-Package-" +  itemlocator.replace(".","") +itemversion,
+      "relatedSpdxElement": "SPDXRef-Package-" +   paclocator.replace(".","") +pacversion,
+      "relationshipType": "DEPENDS_ON"
+        }
+                fileContents["relationships"].append(new_relation)  
+
+
            #ADD Entry for every relationship     
            return fileContents
 
@@ -217,6 +238,7 @@ async def main():
           print("\nThe SBOM was missing " + str(len(missingdirect)) + " direct dependencies.\n")
 
           relations = analyzer.getRelationships()
+          missing_packs.update(missingdirect)
 
           newfileContents=restoreSBOM(fileContents, missing_packs, relations)
           print("\nThe SBOM was missing " + str(len(missing_packs)) + " transitive dependencies.\n")
