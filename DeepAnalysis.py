@@ -174,7 +174,7 @@ class DeepAnalysis:
         
     
 
-    def analyzeDirect(self):
+    async def analyzeDirect(self,relationships):
      repo=self.repo
      owner=self.owner
      repo_url = f"https://github.com/{owner}/{repo}.git"
@@ -211,6 +211,7 @@ class DeepAnalysis:
               if version !="":
                    dependency+="@"+ version
               directdeps.append(dependency)
+              await self.add_to_relationships("root",dependency,relationships)                  
           
           
           
@@ -252,7 +253,8 @@ class DeepAnalysis:
                      dependency=groupID+"/"+artificatID
                      if version !="":
                         dependency+="@"+ version
-                     directdeps.append(dependency)                     
+                     directdeps.append(dependency)   
+                     await self.add_to_relationships("root",dependency,relationships)                  
 
 
                        
@@ -367,11 +369,13 @@ class DeepAnalysis:
                          newpac+="@" + version
                          
                  
-                  #if newpac not in present_packs 
+                    #Pac DEPENDS ON newpac 
+
+                     await self.add_to_relationships(pac,newpac,relationships)
+                     #if newpac not in present_packs 
+
                      if newpac not in missing_packs and newpac not in present_packs:
                             
-                            #NEWPAC DEPENDS ON PAC 
-                            await self.add_to_relationships(pac,newpac,relationships)
                             await self.add_to_missing_packs(newpac, missing_packs)
                    # If newpac not in checked
                      if newpac not in checked_packages and newpac not in need_to_check:
@@ -526,7 +530,8 @@ class DeepAnalysis:
                 
        global missed_items   
        print("Checking Direct Dependencies...")
-       directdeps=self.analyzeDirect()
+    
+       directdeps= await self.analyzeDirect(relationships)
        for item in directdeps:
             if item not in present_packs:
                 self.missingdirect.append(item)
