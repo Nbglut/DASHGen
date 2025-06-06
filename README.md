@@ -13,4 +13,15 @@ Then, DASHGen uses Maven or Gradle files to traverse the dependency trees and ga
 
 
 
-WORK IN PROGRESS - While the functionality is mostly done, there exists some work before DASHGen can be properly used
+# How to Use
+
+Using DASHGen at the moment is relaitvely simple. 
+
+python ./RestoreSBOM.py 
+
+This script then asks for the GitHub owner and name, and then completes the SBOM
+
+
+# What's Next?
+
+The creation of a better GUI and executable would be the next steps. Additionally, DASHGen takes the GitHub SBOM automatically created and supplements it, however, an option to create an SBOM from complete scratch could easily be implemented if demand arises.
