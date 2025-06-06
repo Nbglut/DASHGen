@@ -496,7 +496,7 @@ class DeepAnalysis:
        relationships={}
        #print(self.SBOMContents)
        pks=self.SBOMContents["packages"]
-       python = input("Is this a Python Project? True or False")
+       python = input("Is this a Python Project? True or False (Assumes Not)") 
        if python=="True":
           for package in pks:
              if package['name'] != self.SBOMContents['name']:

@@ -215,11 +215,17 @@ def restoreSBOM(fileContents, missing_packs, relationships, rootID):
 
 #Method to get rootname
 def getRootID(fileContents):
-#search ["relationships"
+#search ["relationships"] for entry where spdxElementId is the document
      relationships=fileContents["relationships"]
-# get the relationship with "relationshipType" of "DESCRIBES"
-# get the name of the "relatedSpdxElement" - this is the name of the root. 
-     return "roottest3"
+     docuentry= next(
+        ( item for item in relationships if item['spdxElementId']== 'SPDXRef-DOCUMENT'), None
+        )
+        #if it exists, return the relatedSpdxElement, this is the root name
+     if docuentry:
+          #print(docuentry['relatedSpdxElement'])
+          return docuentry['relatedSpdxElement']
+ 
+     return "ErrorInGettingRoot"
 
 
 
@@ -254,16 +260,16 @@ async def main():
           with open(filename+'_restored.json', 'w') as file:
              json.dump(newfileContents, file, indent=4)
              print("Restored file saved in " + filename+'_restored.json')
-          comparetoGround = input("Compare to ground truth? (T/F): ")
-          if comparetoGround=="T":
-           groundtruthfile = input("Directory to Ground Truth: ")
-           ground_truth=""
-           with open(groundtruthfile, 'r') as file:
-                ground_truth = json.load(file)
-           compares2=CompareSBOMs("")
-           compares2.setTruth(ground_truth)
-           compares2.setNonTruth(newfileContents)
-           compares2.compareSBOMs()
+     #     comparetoGround = input("Compare to ground truth? (T/F): ")
+     #     if comparetoGround=="T":
+     #      groundtruthfile = input("Directory to Ground Truth: ")
+     #      ground_truth=""
+     #      with open(groundtruthfile, 'r') as file:
+     #           ground_truth = json.load(file)
+     #      compares2=CompareSBOMs("")
+     #      compares2.setTruth(ground_truth)
+     #      compares2.setNonTruth(newfileContents)
+     #      compares2.compareSBOMs()
       
        
        
