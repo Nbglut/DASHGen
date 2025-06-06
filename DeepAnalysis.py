@@ -104,7 +104,11 @@ async def get_XML_from_link(link):
         
         
 async def named_task(coro, name):
-    result1, result2 = await coro
+    result = await coro
+    if isinstance(result, tuple) and len(result) == 2:
+        result1, result2 = result
+    else:
+        result1, result2 = result, None  # fallback
     return (name, result1, result2)
 
 
@@ -425,11 +429,11 @@ class DeepAnalysis:
                   if paclower not in checked_packages:
                   #ALSO Check if sbom[package][homepage] exists and is a github link 
                       if "com.git" in paclower and pac!= self.SBOMContents['name'] and paclower not in checked_packages:
-                               tasks.append(get_json_from_link(f"https://api.github.com/repos/" + pac.split(".")[2] +"/dependency-graph/sbom"))
+                               tasks.append(named_task(get_json_from_link(f"https://api.github.com/repos/" + pac.split(".")[2] +"/dependency-graph/sbom"),pac))
                       elif "github.com" in paclower:
-                              tasks.append(get_json_from_link("https://api.github.com/repos/" + pac.split("/")[3] + "/" + pac.split("/")[4] +"/dependency-graph/sbom" ))
+                              tasks.append(named_task(get_json_from_link("https://api.github.com/repos/" + pac.split("/")[3] + "/" + pac.split("/")[4] +"/dependency-graph/sbom" ),pac))
                       elif "https://" not in paclower and "/" not in paclower:
-                        tasks.append(get_json_from_link(f"https://pypi.org/pypi/{pac}/json"))
+                        tasks.append(named_task(get_json_from_link(f"https://pypi.org/pypi/{pac}/json"),pac))
 
                   await self.add_to_checked_packs(paclower,checked_packages)  
                results = await asyncio.gather(*tasks)

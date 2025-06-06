@@ -1,5 +1,6 @@
 from DeepAnalysis import DeepAnalysis
 from CompareSBOMs import CompareSBOMs
+from SBOM import SBOM
 import json
 import asyncio
 import aiohttp
@@ -215,6 +216,7 @@ def restoreSBOM(fileContents, missing_packs, relationships, rootID):
 #Method to get rootname
 def getRootID(fileContents):
 #search ["relationships"
+     relationships=fileContents["relationships"]
 # get the relationship with "relationshipType" of "DESCRIBES"
 # get the name of the "relatedSpdxElement" - this is the name of the root. 
      return "roottest3"
@@ -222,22 +224,18 @@ def getRootID(fileContents):
 
 
 
-async def main():
-          filename=sys.argv[1]
-          #change it so we remove this
-          with open(filename, 'r') as file:
-                fileContents = json.load(file)
-          if 'sbom' in fileContents:
-                fileContents=fileContents['sbom']
-                
-                
-          #Instead, we start here      
+async def main():        
+          #get owner and repo from user
           owner=input("Owner of Github: ")
           repo=input("Repo name: ")
           #use the GithubAPI to get the SBOM given by GitHUB SBOM 
+          reposbom= SBOM("https://github.com/" + owner + "/" + repo)
           #get the filecontents of the the GitHUB SBOM
-          #get teh rootname of 
-
+          fileContents =reposbom.getJson()
+          
+          if 'sbom' in fileContents:
+                fileContents=fileContents['sbom']
+          
           analyzer=DeepAnalysis(fileContents, owner, repo)
           await analyzer.Analyze()
           missing_packs=analyzer.getMissingPacks()         
@@ -252,14 +250,7 @@ async def main():
           newfileContents=restoreSBOM(fileContents, missing_packs, relations, getRootID(fileContents)) 
           print("\nThe SBOM was missing " + str(len(missing_packs)) + " transitive dependencies.\n")
 
-
-
-
-
-
-
-
-          filename=filename.split("json")[0]
+          filename=owner +"_" + repo
           with open(filename+'_restored.json', 'w') as file:
              json.dump(newfileContents, file, indent=4)
              print("Restored file saved in " + filename+'_restored.json')
