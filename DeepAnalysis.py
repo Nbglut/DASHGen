@@ -302,7 +302,7 @@ class DeepAnalysis:
                   if pacVersion != "":
                    url=linkPart1 + "/" +pacArtificat + "/" +pacVersion + "/" + pacArtificat + "-" +pacVersion + ".pom"
                   else: 
-                   url=get_XML_from_link(linkPart1 + "/" +pacArtificat +  ".pom", name=pac)
+                   url=linkPart1 + "/" +pacArtificat +  ".pom"
                   tasks.append(named_task(get_XML_from_link(url), pac))
 
                 
